@@ -1,0 +1,130 @@
+# CyberAgents Multi-Agent System Configuration
+
+# LLM Provider Configuration
+llm_provider:
+  # Options: ollama, lmstudio, openai
+  default: ollama
+
+  ollama:
+    base_url: http://localhost:11434
+    models:
+      reasoning: phi4:latest
+      specialist: llama3.2:latest
+      embedding: nomic-embed-text:latest
+    timeout: 300
+
+  lmstudio:
+    base_url: http://localhost:1234/v1
+    models:
+      reasoning: phi-4
+      specialist: llama-3.2-3b
+    timeout: 300
+    api_key: lm-studio  # LM Studio doesn't require real API key
+
+  openai:
+    base_url: https://api.openai.com/v1
+    models:
+      reasoning: gpt-4o
+      specialist: gpt-4o-mini
+    timeout: 300
+    api_key: ${OPENAI_API_KEY}  # Set via environment variable
+
+# Orchestrator Configuration
+orchestrator:
+  name: CyberSecOrchestrator
+  model_type: reasoning
+  max_iterations: 10
+  temperature: 0.7
+  system_prompt: |
+    You are the CyberSec Orchestrator, a reasoning agent responsible for coordinating multiple specialized cybersecurity agents.
+
+    Your capabilities:
+    - Analyze incoming security requests and break them into sub-tasks
+    - Route tasks to appropriate specialist agents
+    - Synthesize responses from multiple agents
+    - Provide comprehensive security analysis and recommendations
+
+    Available specialists:
+    1. Malware Reverse Engineer - Binary analysis and malware dissection
+    2. Cyber Threat Intelligence Expert - Threat correlation and attribution
+    3. Cyber Threat Researcher - Emerging threats and underground ecosystems
+    4. Cyber Forensic Expert - Digital evidence collection and analysis
+    5. SOC Analyst - Alert triage and incident response
+    6. Red Teamer - Offensive security and adversary emulation
+    7. Blue Teamer - Defensive security and threat hunting
+    8. Vulnerability & Bug Bounty Researcher - Vulnerability discovery and disclosure
+    9. Code Security Expert - Secure code review and architecture
+
+    When you receive a task:
+    1. Analyze the request and identify required specialists
+    2. Delegate sub-tasks to appropriate agents
+    3. Collect and synthesize their responses
+    4. Provide a comprehensive answer with actionable recommendations
+
+    Use structured reasoning to break down complex security scenarios.
+
+# Agent Configuration
+agents:
+  config_file: config/cybersec-system-prompts.json
+  temperature: 0.3
+  max_tokens: 4096
+  concurrent_execution: true
+  timeout: 180
+
+# Web UI Configuration
+web_ui:
+  title: CyberAgents - Multi-Agent Cybersecurity System
+  port: 8501
+  host: 0.0.0.0
+  theme: dark
+  max_history: 50
+
+# WebHook Configuration
+webhook:
+  enabled: true
+  port: 8502
+  host: 0.0.0.0
+  endpoints:
+    - name: security_event
+      path: /api/security-event
+      auth_required: true
+    - name: ioc_report
+      path: /api/ioc-report
+      auth_required: true
+    - name: vulnerability_scan
+      path: /api/vulnerability-scan
+      auth_required: false
+  api_key: ${WEBHOOK_API_KEY}  # Set via environment variable
+
+# MCP Server Configuration
+mcp:
+  enabled: true
+  server_name: cyberagents-mcp
+  version: 1.0.0
+  transport: stdio
+  tools:
+    - name: analyze_threat
+      description: Analyze a cybersecurity threat using specialist agents
+    - name: reverse_malware
+      description: Reverse engineer a malware sample
+    - name: investigate_incident
+      description: Investigate a security incident
+    - name: review_code_security
+      description: Review code for security vulnerabilities
+    - name: research_vulnerability
+      description: Research and analyze a vulnerability
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: logs/cyberagents.log
+  console: true
+
+# Security Configuration
+security:
+  enable_rate_limiting: true
+  rate_limit: 100  # requests per minute
+  enable_input_validation: true
+  max_input_length: 50000
+  sanitize_outputs: true
