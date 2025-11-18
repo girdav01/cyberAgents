@@ -258,6 +258,77 @@ Contains detailed configurations for all 9 specialist agents with their:
 8. **Cyber Threat Intelligence Expert** - Threat correlation and attribution
 9. **Cyber Threat Researcher** - Emerging threats and AI-driven attacks
 
+## 🎯 Enhanced Agent Capabilities
+
+Each specialist agent now includes **detailed functions and workflows**:
+
+### 📊 Capabilities Summary
+- **81 Specialized Functions** across all 9 agent types
+- **27 Predefined Workflows** for common cybersecurity operations
+- **40+ Tool Integrations** with API configurations
+- **8 Function Categories**: Analysis, Detection, Investigation, Remediation, Research, Exploitation, Defense, Reporting
+
+### 🔧 Function Examples
+
+**Malware Reverse Engineer** (9 functions):
+- `static_binary_analysis` - Disassemble and analyze binaries
+- `dynamic_malware_analysis` - Sandbox execution and behavior monitoring
+- `yara_rule_creation` - Generate detection rules
+- `ransomware_analysis` - Specialized ransomware analysis
+
+**Cyber Threat Intelligence Expert** (8 functions):
+- `threat_actor_profiling` - Build APT profiles
+- `ioc_enrichment` - Enrich indicators with context
+- `campaign_tracking` - Track threat campaigns
+- `stix_bundle_creation` - Create STIX 2.1 bundles
+
+**SOC Analyst** (8 functions):
+- `alert_triage` - Prioritize security alerts
+- `log_correlation` - Correlate events across sources
+- `endpoint_investigation` - Investigate suspicious endpoints
+- `phishing_analysis` - Analyze phishing emails
+
+**Red Teamer** (10 functions):
+- `reconnaissance` - OSINT and attack surface mapping
+- `vulnerability_exploitation` - Exploit vulnerabilities
+- `lateral_movement` - Move across compromised networks
+- `credential_harvesting` - Extract credentials
+- `data_exfiltration` - Simulate data theft
+
+**Blue Teamer** (9 functions):
+- `detection_rule_development` - Create Sigma/YARA rules
+- `threat_hunting` - Proactive threat hunting
+- `purple_team_exercise` - Coordinate purple team exercises
+- `attack_simulation_testing` - Test defenses with Atomic Red Team
+
+### 🔄 Workflow Examples
+
+Each agent includes predefined workflows:
+
+```python
+# Execute a complete malware analysis workflow
+agent = manager.get_agent_by_id("malware_reverse_engineer")
+responses = agent.execute_workflow(
+    "complete_malware_triage",
+    {"sample_path": "/samples/malware.exe"}
+)
+
+# Execute SOC analyst alert-to-resolution workflow
+soc_agent = manager.get_agent_by_id("soc_analyst")
+responses = soc_agent.execute_workflow(
+    "alert_to_resolution",
+    {"alert_id": "ALERT-12345"}
+)
+```
+
+### 📚 Documentation
+
+For complete details on all agent capabilities:
+- **Full Documentation**: [`docs/AGENT_CAPABILITIES.md`](docs/AGENT_CAPABILITIES.md)
+- **Quick Summary**: [`docs/CAPABILITIES_SUMMARY.md`](docs/CAPABILITIES_SUMMARY.md)
+- **Usage Examples**: [`examples/agent_capabilities_example.py`](examples/agent_capabilities_example.py)
+- **Tool Integrations**: [`src/tools/tool_integrations.py`](src/tools/tool_integrations.py)
+
 ## 🔌 Integration Examples
 
 ### WebHook Integration
