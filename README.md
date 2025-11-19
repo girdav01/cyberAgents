@@ -68,6 +68,76 @@ A powerful multi-agent cybersecurity analysis system that leverages specialized 
 
 ## 🚀 Quick Start
 
+Choose your deployment method:
+- [🐳 Docker Deployment](#-docker-deployment-recommended) (Recommended - easiest)
+- [💻 Local Installation](#-local-installation) (For development)
+
+## 🐳 Docker Deployment (Recommended)
+
+### Quick Start with Docker
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/cyberAgents.git
+cd cyberAgents
+
+# Copy and configure environment
+cp .env.example .env
+
+# Start all services with one command
+make first-run
+
+# Or using docker-compose directly
+docker-compose up -d
+```
+
+Access the services:
+- **Streamlit UI**: http://localhost:8501
+- **WebHook API**: http://localhost:8502
+- **Ollama**: http://localhost:11434
+
+### Common Docker Commands
+
+```bash
+# Start services
+make up              # or: docker-compose up -d
+
+# View logs
+make logs            # or: docker-compose logs -f
+
+# Stop services
+make down            # or: docker-compose down
+
+# Restart services
+make restart         # or: docker-compose restart
+
+# Pull Ollama models
+make pull-models
+
+# See all commands
+make help
+```
+
+### Production Deployment
+
+```bash
+# Build and run with production settings
+make prod-build
+make prod-up
+
+# Or using docker-compose
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+📚 **Full Docker Documentation**: See [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) for complete guide including:
+- Production deployment with SSL/TLS
+- Resource optimization
+- Security hardening
+- Backup and restore
+- Troubleshooting
+
+## 💻 Local Installation
+
 ### Prerequisites
 
 1. **Python 3.9+** installed

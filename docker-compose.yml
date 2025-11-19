@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # Streamlit Web UI
+  streamlit:
+    build: .
+    container_name: cyberagents-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    networks:
+      - cyberagents-network
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    command: streamlit run src/ui/streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+
+  # WebHook Server
+  webhook:
+    build: .
+    container_name: cyberagents-webhook
+    ports:
+      - "8502:8502"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-change-me-in-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    networks:
+      - cyberagents-network
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    command: python src/webhook/server.py
+
+  # MCP Server
+  mcp:
+    build: .
+    container_name: cyberagents-mcp
+    ports:
+      - "5000:5000"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    networks:
+      - cyberagents-network
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    command: python src/mcp/server.py
+
+  # Ollama LLM Service (optional - comment out if using external Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cyberagents-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+    # Optionally pull models on startup
+    # entrypoint: ["/bin/sh", "-c"]
+    # command:
+    #   - |
+    #     ollama serve &
+    #     sleep 5
+    #     ollama pull phi4:latest
+    #     ollama pull llama3.2:latest
+    #     wait
+
+networks:
+  cyberagents-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
+    driver: local
