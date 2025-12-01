@@ -65,7 +65,7 @@ orchestrator:
 
 # Agent Configuration
 agents:
-  config_file: config/cybersec-system-prompts.json
+  config_file: config/adv_cybersec-system-prompts.json
   temperature: 0.3
   max_tokens: 4096
   concurrent_execution: true
@@ -100,7 +100,7 @@ webhook:
 mcp:
   enabled: true
   server_name: cyberagents-mcp
-  version: 1.0.0
+  version: 2.0.0
   transport: stdio
   tools:
     - name: analyze_threat
@@ -113,6 +113,16 @@ mcp:
       description: Review code for security vulnerabilities
     - name: research_vulnerability
       description: Research and analyze a vulnerability
+    - name: enrich_ioc_opencti
+      description: Enrich IOCs using OpenCTI threat intelligence platform
+    - name: osint_reconnaissance
+      description: Perform OSINT reconnaissance using SpiderFoot
+    - name: query_misp_events
+      description: Query MISP threat intelligence for events and indicators
+    - name: analyze_file_sandbox
+      description: Analyze files using Trend Vision One Sandbox
+    - name: create_threat_report
+      description: Create comprehensive threat intelligence reports
 
 # Logging Configuration
 logging:

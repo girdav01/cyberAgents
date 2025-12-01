@@ -1,0 +1,214 @@
+version: '3.8'
+
+services:
+  # Main CyberAgents Application (Streamlit UI)
+  cyberagents-ui:
+    build: .
+    container_name: cyberagents-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Webhook Server
+  cyberagents-webhook:
+    build: .
+    container_name: cyberagents-webhook
+    command: ["python", "src/webhook/server.py"]
+    ports:
+      - "8502:8502"
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - WEBHOOK_API_KEY=${WEBHOOK_API_KEY:-default_key_change_me}
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8502/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # OpenCTI Platform (Threat Intelligence)
+  opencti:
+    image: opencti/platform:latest
+    container_name: opencti
+    ports:
+      - "8080:8080"
+    environment:
+      - APP__PORT=8080
+      - APP__BASE_URL=${OPENCTI_BASE_URL:-http://localhost:8080}
+      - APP__ADMIN__EMAIL=${OPENCTI_ADMIN_EMAIL:-admin@opencti.io}
+      - APP__ADMIN__PASSWORD=${OPENCTI_ADMIN_PASSWORD:-ChangeMeNow!}
+      - APP__ADMIN__TOKEN=${OPENCTI_ADMIN_TOKEN:-ChangeMe}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-opencti}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-ChangeMeNow!}
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - REDIS_HOSTNAME=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+    depends_on:
+      - redis
+      - elasticsearch
+      - minio
+      - rabbitmq
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # Redis for OpenCTI
+  redis:
+    image: redis:7-alpine
+    container_name: opencti-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # Elasticsearch for OpenCTI
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: opencti-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # MinIO for OpenCTI file storage
+  minio:
+    image: minio/minio:latest
+    container_name: opencti-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-opencti}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-ChangeMeNow!}
+    volumes:
+      - minio-data:/data
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # RabbitMQ for OpenCTI
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: opencti-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # SpiderFoot OSINT Tool
+  spiderfoot:
+    image: spiderfoot/spiderfoot:latest
+    container_name: spiderfoot
+    ports:
+      - "5001:5001"
+    volumes:
+      - spiderfoot-data:/var/lib/spiderfoot
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+    command: ["python3", "./sf.py", "-l", "0.0.0.0:5001"]
+
+  # MISP Threat Intelligence Platform
+  misp:
+    image: coolacid/misp-docker:core-latest
+    container_name: misp
+    ports:
+      - "8443:443"
+      - "8000:80"
+    environment:
+      - MYSQL_HOST=misp-db
+      - MYSQL_DATABASE=misp
+      - MYSQL_USER=misp
+      - MYSQL_PASSWORD=${MISP_DB_PASSWORD:-misp_password}
+      - MISP_ADMIN_EMAIL=${MISP_ADMIN_EMAIL:-admin@misp.local}
+      - MISP_ADMIN_PASSPHRASE=${MISP_ADMIN_PASSPHRASE:-admin}
+      - MISP_BASEURL=${MISP_BASEURL:-https://localhost:8443}
+    depends_on:
+      - misp-db
+      - misp-redis
+    volumes:
+      - misp-data:/var/www/MISP
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # MySQL Database for MISP
+  misp-db:
+    image: mysql:8.0
+    container_name: misp-db
+    environment:
+      - MYSQL_DATABASE=misp
+      - MYSQL_USER=misp
+      - MYSQL_PASSWORD=${MISP_DB_PASSWORD:-misp_password}
+      - MYSQL_ROOT_PASSWORD=${MISP_ROOT_PASSWORD:-root_password}
+    volumes:
+      - misp-db-data:/var/lib/mysql
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+  # Redis for MISP
+  misp-redis:
+    image: redis:7-alpine
+    container_name: misp-redis
+    volumes:
+      - misp-redis-data:/data
+    networks:
+      - cyberagents-network
+    restart: unless-stopped
+
+networks:
+  cyberagents-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  elasticsearch-data:
+  minio-data:
+  rabbitmq-data:
+  spiderfoot-data:
+  misp-data:
+  misp-db-data:
+  misp-redis-data:
