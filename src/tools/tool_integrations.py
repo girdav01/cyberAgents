@@ -109,6 +109,46 @@ class MalwareAnalysisTools:
                 "decompiler_available": True
             },
             local_execution=True
+        ),
+        "trend_vision_one_sandbox": ToolIntegration(
+            name="Trend Micro Vision One Sandbox",
+            category=ToolCategory.MALWARE_ANALYSIS,
+            description="Advanced malware analysis sandbox with AI-powered threat detection",
+            configuration={
+                "api_key_required": True,
+                "endpoints": {
+                    "submit_file": "/v3.0/sandbox/files",
+                    "submit_url": "/v3.0/sandbox/urls",
+                    "analysis_report": "/v3.0/sandbox/analysisResults/{id}",
+                    "submission_status": "/v3.0/sandbox/submissions/{id}",
+                    "suspicious_objects": "/v3.0/sandbox/suspiciousObjects"
+                },
+                "supported_file_types": [
+                    "PE", "DLL", "EXE", "MSI", "JAR", "APK",
+                    "PDF", "Office documents", "Scripts", "Archives"
+                ],
+                "analysis_environments": [
+                    "Windows 7/8/10/11",
+                    "Android emulator",
+                    "Linux",
+                    "macOS"
+                ],
+                "features": [
+                    "Behavioral analysis",
+                    "Network traffic capture",
+                    "Memory forensics",
+                    "MITRE ATT&CK mapping",
+                    "Threat intelligence correlation",
+                    "AI-powered detection",
+                    "Code emulation",
+                    "Anti-evasion techniques"
+                ],
+                "analysis_timeout": 600,
+                "max_file_size": "100MB",
+                "rate_limits": "Per subscription tier"
+            },
+            api_available=True,
+            cloud_service=True
         )
     }
 
@@ -182,6 +222,65 @@ class ThreatIntelligenceTools:
             },
             api_available=True,
             cloud_service=True
+        ),
+        "opencti": ToolIntegration(
+            name="OpenCTI",
+            category=ToolCategory.THREAT_INTELLIGENCE,
+            description="Open Cyber Threat Intelligence platform for structured threat intelligence management",
+            configuration={
+                "api_key_required": True,
+                "endpoints": {
+                    "graphql": "/graphql",
+                    "indicators": "/api/indicators",
+                    "reports": "/api/reports",
+                    "observables": "/api/observables",
+                    "entities": "/api/entities"
+                },
+                "supported_formats": ["STIX 2.1", "CSV", "JSON", "PDF"],
+                "features": [
+                    "Knowledge graph visualization",
+                    "STIX 2.1 native support",
+                    "Connector ecosystem",
+                    "Intelligence analysis",
+                    "Threat correlation"
+                ],
+                "database": "Elasticsearch + PostgreSQL",
+                "ui_available": True
+            },
+            api_available=True,
+            local_execution=True,
+            cloud_service=False
+        ),
+        "spiderfoot": ToolIntegration(
+            name="SpiderFoot",
+            category=ToolCategory.THREAT_INTELLIGENCE,
+            description="Automated OSINT reconnaissance and threat intelligence gathering tool",
+            configuration={
+                "api_key_required": False,
+                "endpoints": {
+                    "scan_start": "/api/scan/new",
+                    "scan_status": "/api/scan/{scan_id}",
+                    "scan_results": "/api/scan/{scan_id}/results",
+                    "modules": "/api/modules"
+                },
+                "modules": [
+                    "DNS enumeration",
+                    "WHOIS lookup",
+                    "Social media intel",
+                    "Dark web monitoring",
+                    "Breach data checking",
+                    "Port scanning",
+                    "Certificate transparency",
+                    "Email harvesting",
+                    "Subdomain discovery"
+                ],
+                "integrations": ["VirusTotal", "Shodan", "Have I Been Pwned", "Hunter.io"],
+                "export_formats": ["JSON", "CSV", "GEXF", "GraphML"],
+                "ui_available": True,
+                "cli_available": True
+            },
+            api_available=True,
+            local_execution=True
         )
     }
 

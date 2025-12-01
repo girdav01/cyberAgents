@@ -184,6 +184,123 @@ class CyberAgentsMCPServer:
                         },
                         "required": ["request"]
                     }
+                ),
+                Tool(
+                    name="enrich_ioc_opencti",
+                    description="Enrich indicators of compromise using OpenCTI threat intelligence platform. Provides context, relationships, and threat actor attribution.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "indicator": {
+                                "type": "string",
+                                "description": "IOC to enrich (IP, domain, hash, etc.)"
+                            },
+                            "indicator_type": {
+                                "type": "string",
+                                "description": "Type of indicator",
+                                "enum": ["ip", "domain", "hash", "email", "url", "file"]
+                            }
+                        },
+                        "required": ["indicator", "indicator_type"]
+                    }
+                ),
+                Tool(
+                    name="osint_reconnaissance",
+                    description="Perform OSINT reconnaissance using SpiderFoot. Gathers intelligence from multiple sources including DNS, WHOIS, social media, and breach databases.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "target": {
+                                "type": "string",
+                                "description": "Target for reconnaissance (domain, IP, email, company name)"
+                            },
+                            "scan_type": {
+                                "type": "string",
+                                "description": "Type of scan",
+                                "enum": ["passive", "active", "comprehensive"]
+                            },
+                            "modules": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Specific SpiderFoot modules to run (optional)"
+                            }
+                        },
+                        "required": ["target"]
+                    }
+                ),
+                Tool(
+                    name="query_misp_events",
+                    description="Query MISP threat intelligence platform for events and indicators. Searches across threat events, attributes, and IOCs.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "search_query": {
+                                "type": "string",
+                                "description": "Search query (IOC, tag, event name, etc.)"
+                            },
+                            "search_type": {
+                                "type": "string",
+                                "description": "Type of search",
+                                "enum": ["events", "attributes", "objects", "tags"]
+                            },
+                            "time_range": {
+                                "type": "string",
+                                "description": "Time range for search (e.g., '7d', '30d', '1y')"
+                            }
+                        },
+                        "required": ["search_query"]
+                    }
+                ),
+                Tool(
+                    name="analyze_file_sandbox",
+                    description="Submit a file for analysis in Trend Vision One Sandbox. Provides behavioral analysis, network activity, and MITRE ATT&CK mapping.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "file_info": {
+                                "type": "string",
+                                "description": "File information (hash, path, or description)"
+                            },
+                            "analysis_environment": {
+                                "type": "string",
+                                "description": "Analysis environment",
+                                "enum": ["windows7", "windows10", "windows11", "linux", "android"]
+                            },
+                            "analysis_timeout": {
+                                "type": "number",
+                                "description": "Analysis timeout in seconds (default: 300)"
+                            }
+                        },
+                        "required": ["file_info"]
+                    }
+                ),
+                Tool(
+                    name="create_threat_report",
+                    description="Create a comprehensive threat intelligence report combining data from multiple sources (OpenCTI, MISP, SpiderFoot).",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "threat_name": {
+                                "type": "string",
+                                "description": "Name or identifier of the threat"
+                            },
+                            "iocs": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of IOCs to include in report"
+                            },
+                            "include_osint": {
+                                "type": "boolean",
+                                "description": "Include OSINT data from SpiderFoot"
+                            },
+                            "export_format": {
+                                "type": "string",
+                                "description": "Report format",
+                                "enum": ["markdown", "json", "pdf", "stix"]
+                            }
+                        },
+                        "required": ["threat_name"]
+                    }
                 )
             ]
 
@@ -210,6 +327,16 @@ class CyberAgentsMCPServer:
                     result = await self._handle_research_vulnerability(arguments)
                 elif name == "analyze_general":
                     result = await self._handle_analyze_general(arguments)
+                elif name == "enrich_ioc_opencti":
+                    result = await self._handle_enrich_ioc_opencti(arguments)
+                elif name == "osint_reconnaissance":
+                    result = await self._handle_osint_reconnaissance(arguments)
+                elif name == "query_misp_events":
+                    result = await self._handle_query_misp_events(arguments)
+                elif name == "analyze_file_sandbox":
+                    result = await self._handle_analyze_file_sandbox(arguments)
+                elif name == "create_threat_report":
+                    result = await self._handle_create_threat_report(arguments)
                 else:
                     return [TextContent(
                         type="text",
@@ -370,6 +497,214 @@ Please provide:
         request = arguments.get('request')
         context = arguments.get('context', {})
 
+        result = self.agent_manager.process_request(request, context)
+
+        return self._format_result(result)
+
+    async def _handle_enrich_ioc_opencti(self, arguments: Dict[str, Any]) -> str:
+        """Handle IOC enrichment using OpenCTI"""
+        indicator = arguments.get('indicator')
+        indicator_type = arguments.get('indicator_type')
+
+        request = f"""IOC Enrichment Request (OpenCTI):
+
+Indicator: {indicator}
+Type: {indicator_type}
+
+Please enrich this indicator using threat intelligence analysis:
+1. Query OpenCTI knowledge base for related entities
+2. Identify associated threat actors and campaigns
+3. Find related IOCs and patterns
+4. Provide STIX 2.1 relationships
+5. Assess threat severity and confidence
+6. Provide mitigation recommendations
+
+Use the Cyber Threat Intelligence Expert to correlate this indicator with known threats.
+"""
+
+        context = {
+            'indicator': indicator,
+            'indicator_type': indicator_type,
+            'tool': 'opencti'
+        }
+        result = self.agent_manager.process_request(request, context)
+
+        return self._format_result(result)
+
+    async def _handle_osint_reconnaissance(self, arguments: Dict[str, Any]) -> str:
+        """Handle OSINT reconnaissance using SpiderFoot"""
+        target = arguments.get('target')
+        scan_type = arguments.get('scan_type', 'passive')
+        modules = arguments.get('modules', [])
+
+        modules_str = ", ".join(modules) if modules else "all relevant modules"
+
+        request = f"""OSINT Reconnaissance Request (SpiderFoot):
+
+Target: {target}
+Scan Type: {scan_type}
+Modules: {modules_str}
+
+Please perform comprehensive OSINT reconnaissance:
+1. DNS enumeration and subdomain discovery
+2. WHOIS and domain registration information
+3. Social media presence and leaked credentials
+4. Dark web and breach database checks
+5. Port scanning and service identification (if active scan)
+6. Certificate transparency logs
+7. Email addresses and personnel information
+8. Related domains and infrastructure
+
+Use the Cyber Threat Intelligence Expert and Cyber Threat Researcher to analyze findings.
+"""
+
+        context = {
+            'target': target,
+            'scan_type': scan_type,
+            'tool': 'spiderfoot'
+        }
+        result = self.agent_manager.process_request(request, context)
+
+        return self._format_result(result)
+
+    async def _handle_query_misp_events(self, arguments: Dict[str, Any]) -> str:
+        """Handle MISP event queries"""
+        search_query = arguments.get('search_query')
+        search_type = arguments.get('search_type', 'events')
+        time_range = arguments.get('time_range', '30d')
+
+        request = f"""MISP Query Request:
+
+Search Query: {search_query}
+Search Type: {search_type}
+Time Range: {time_range}
+
+Please query MISP threat intelligence platform:
+1. Search for matching events and indicators
+2. Retrieve event details and context
+3. Extract related attributes and objects
+4. Identify threat tags and classifications
+5. Find correlated events and campaigns
+6. Provide STIX 2.1 export if available
+7. Assess threat relevance and severity
+
+Use the Cyber Threat Intelligence Expert to analyze MISP data and correlate findings.
+"""
+
+        context = {
+            'search_query': search_query,
+            'search_type': search_type,
+            'time_range': time_range,
+            'tool': 'misp'
+        }
+        result = self.agent_manager.process_request(request, context)
+
+        return self._format_result(result)
+
+    async def _handle_analyze_file_sandbox(self, arguments: Dict[str, Any]) -> str:
+        """Handle file analysis using Trend Vision One Sandbox"""
+        file_info = arguments.get('file_info')
+        analysis_environment = arguments.get('analysis_environment', 'windows10')
+        analysis_timeout = arguments.get('analysis_timeout', 300)
+
+        request = f"""Sandbox Analysis Request (Trend Vision One):
+
+File Information: {file_info}
+Analysis Environment: {analysis_environment}
+Timeout: {analysis_timeout}s
+
+Please perform comprehensive sandbox analysis:
+1. Submit file to Trend Vision One Sandbox
+2. Execute behavioral analysis in isolated environment
+3. Capture network traffic and DNS queries
+4. Monitor process creation and file modifications
+5. Analyze memory artifacts and API calls
+6. Map behaviors to MITRE ATT&CK techniques
+7. Extract IOCs (domains, IPs, file hashes)
+8. Correlate with threat intelligence
+9. Assess malware family and capabilities
+10. Provide detection and mitigation recommendations
+
+Use the Malware Reverse Engineer to analyze sandbox results and the Cyber Threat Intelligence Expert for attribution.
+"""
+
+        context = {
+            'file_info': file_info,
+            'analysis_environment': analysis_environment,
+            'analysis_timeout': analysis_timeout,
+            'tool': 'trend_vision_one_sandbox'
+        }
+        result = self.agent_manager.process_request(request, context)
+
+        return self._format_result(result)
+
+    async def _handle_create_threat_report(self, arguments: Dict[str, Any]) -> str:
+        """Handle comprehensive threat report creation"""
+        threat_name = arguments.get('threat_name')
+        iocs = arguments.get('iocs', [])
+        include_osint = arguments.get('include_osint', True)
+        export_format = arguments.get('export_format', 'markdown')
+
+        iocs_str = "\n".join([f"  - {ioc}" for ioc in iocs]) if iocs else "  (To be gathered during analysis)"
+
+        request = f"""Comprehensive Threat Intelligence Report:
+
+Threat Name: {threat_name}
+IOCs Provided:
+{iocs_str}
+
+Include OSINT: {include_osint}
+Export Format: {export_format}
+
+Please create a comprehensive threat intelligence report:
+
+**Data Sources:**
+1. OpenCTI - Structured threat intelligence and relationships
+2. MISP - Community threat events and indicators
+3. SpiderFoot - OSINT reconnaissance (if include_osint=True)
+4. Internal agent analysis
+
+**Report Sections:**
+1. Executive Summary
+   - Threat overview and severity
+   - Key findings and impact assessment
+
+2. Threat Analysis
+   - Threat actor attribution and motivation
+   - Campaign timeline and evolution
+   - Tactics, Techniques, and Procedures (TTPs)
+
+3. Technical Details
+   - Malware analysis and capabilities
+   - Infrastructure analysis (domains, IPs, hosting)
+   - Attack chain and kill chain mapping
+
+4. Indicators of Compromise
+   - Complete IOC list with context
+   - Detection rules (Sigma, YARA, Snort)
+   - STIX 2.1 bundle
+
+5. Impact Assessment
+   - Affected sectors and geographies
+   - Potential business impact
+   - Risk scoring (CVSS/MITRE ATT&CK)
+
+6. Recommendations
+   - Detection strategies
+   - Mitigation measures
+   - Incident response playbook
+   - Threat hunting queries
+
+Use ALL relevant specialist agents to compile this comprehensive report.
+"""
+
+        context = {
+            'threat_name': threat_name,
+            'iocs': iocs,
+            'include_osint': include_osint,
+            'export_format': export_format,
+            'comprehensive_analysis': True
+        }
         result = self.agent_manager.process_request(request, context)
 
         return self._format_result(result)

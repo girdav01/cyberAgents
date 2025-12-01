@@ -12,6 +12,9 @@ A powerful multi-agent cybersecurity analysis system that leverages specialized 
 - **💬 MCP Protocol Support**: Programmatic access via Model Context Protocol
 - **⚡ Concurrent Execution**: Parallel agent execution for faster analysis
 - **🔧 Highly Configurable**: YAML-based configuration for easy customization
+- **🐳 Docker Deployment**: Complete containerized deployment with Docker Compose
+- **🔍 Advanced Threat Intelligence**: Integration with OpenCTI, MISP, SpiderFoot, and Trend Vision One
+- **📊 Enhanced System Prompts**: Advanced cybersecurity expert prompts with 15+ years expertise simulation
 
 ## 🏗️ Architecture
 
@@ -75,6 +78,7 @@ A powerful multi-agent cybersecurity analysis system that leverages specialized 
    - [Ollama](https://ollama.ai/) (recommended for local deployment)
    - [LM Studio](https://lmstudio.ai/)
    - OpenAI API access
+3. **Optional: Docker & Docker Compose** for containerized deployment
 
 ### Installation
 
@@ -113,6 +117,69 @@ ollama pull llama3.2:latest # Specialist agents model
 
 **For OpenAI**:
 - Set your API key in `.env`: `OPENAI_API_KEY=your_key_here`
+
+### 🐳 Docker Deployment (Recommended for Production)
+
+CyberAgents now includes complete Docker support with integrated security tools!
+
+#### Quick Docker Start
+
+```bash
+# Clone and setup
+git clone https://github.com/yourusername/cyberAgents.git
+cd cyberAgents
+
+# Run installation script
+chmod +x scripts/install_tools.sh
+./scripts/install_tools.sh
+```
+
+The installation script offers multiple deployment options:
+1. **Full deployment** - CyberAgents + OpenCTI + SpiderFoot + MISP
+2. **Minimal** - CyberAgents only
+3. **Custom** - Choose specific tools
+
+#### Manual Docker Deployment
+
+```bash
+# Copy and configure environment
+cp .env.example .env
+nano .env  # Edit with your settings
+
+# Start all services
+docker compose up -d
+
+# Or start specific services
+docker compose up -d cyberagents-ui cyberagents-webhook opencti spiderfoot
+```
+
+#### Integrated Security Tools
+
+**OpenCTI** (http://localhost:8080)
+- Structured threat intelligence platform
+- STIX 2.1 native support
+- Knowledge graph visualization
+- Connector ecosystem for threat feeds
+
+**SpiderFoot** (http://localhost:5001)
+- Automated OSINT reconnaissance
+- 200+ modules for intelligence gathering
+- Dark web monitoring
+- Breach data checking
+
+**MISP** (https://localhost:8443)
+- Threat intelligence sharing platform
+- Event correlation and analysis
+- STIX/TAXII support
+- Community threat feeds
+
+**Trend Vision One Sandbox** (Cloud API)
+- Advanced malware analysis
+- Behavioral detection
+- MITRE ATT&CK mapping
+- Multi-environment support
+
+For detailed Docker deployment instructions, see **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)**
 
 ### Running the Application
 
